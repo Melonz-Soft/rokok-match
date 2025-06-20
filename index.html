@@ -146,6 +146,14 @@
             height: 20px;
             animation: spin 1s linear infinite;
         }
+        
+        /* File upload styling */
+        .file-upload-label {
+            display: block;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -169,9 +177,8 @@
                 
                 <div class="flex flex-col md:flex-row gap-8 items-center">
                     <div class="w-full md:w-1/2">
-                        <form id="uploadForm">
-                            <div class="photo-container p-4 cursor-pointer bg-gray-50 rounded-lg text-center" id="uploadContainer">
-                                <input type="file" id="photoUpload" accept="image/*" class="hidden">
+                        <div class="photo-container p-4 bg-gray-50 rounded-lg text-center" id="uploadContainer">
+                            <label for="photoUpload" class="file-upload-label" id="uploadLabel">
                                 <div class="py-12" id="uploadContent">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
@@ -179,12 +186,13 @@
                                     <p class="mt-4 font-medium">Klik untuk upload foto</p>
                                     <p class="text-sm text-gray-500 mt-1">Format JPG, PNG (max 5MB)</p>
                                 </div>
-                                <div class="hidden" id="previewContent">
-                                    <img id="photoPreview" class="w-full h-auto rounded-lg max-h-64 object-cover mx-auto" src="" alt="Preview">
-                                    <button type="button" id="changePhoto" class="mt-4 px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg text-gray-700 transition">Ganti Foto</button>
-                                </div>
+                            </label>
+                            <input type="file" id="photoUpload" accept="image/*" class="hidden">
+                            <div class="hidden" id="previewContent">
+                                <img id="photoPreview" class="w-full h-auto rounded-lg max-h-64 object-cover mx-auto" src="" alt="Preview">
+                                <button type="button" id="changePhoto" class="mt-4 px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg text-gray-700 transition">Ganti Foto</button>
                             </div>
-                        </form>
+                        </div>
                     </div>
                     
                     <div class="w-full md:w-1/2">
@@ -299,7 +307,7 @@
         
         // DOM Elements
         const photoUpload = document.getElementById('photoUpload');
-        const uploadContainer = document.getElementById('uploadContainer');
+        const uploadLabel = document.getElementById('uploadLabel');
         const uploadContent = document.getElementById('uploadContent');
         const previewContent = document.getElementById('previewContent');
         const photoPreview = document.getElementById('photoPreview');
@@ -313,85 +321,97 @@
         const smokeAnimation = document.getElementById('smokeAnimation');
         const animatedStripe = document.getElementById('animatedStripe');
         const defaultIcon = document.getElementById('defaultIcon');
-        const uploadForm = document.getElementById('uploadForm');
         
-        // Event Listeners
-        uploadContainer.addEventListener('click', (e) => {
-            // Perbaikan: Menghentikan propagasi jika mengklik di dalam container
-            if (e.target === uploadContainer || e.target.closest('#uploadContent')) {
-                photoUpload.click();
-            }
-        });
+        // Reset upload state
+        const resetUpload = () => {
+            photoUpload.value = '';
+            uploadContent.classList.remove('hidden');
+            previewContent.classList.add('hidden');
+            analyzeBtn.classList.add('hidden');
+            defaultIcon.classList.remove('hidden');
+            resultSection.classList.add('hidden');
+            smokeAnimation.classList.add('hidden');
+            
+            // Reset result card animations
+            document.querySelectorAll('.result-card').forEach(card => {
+                card.classList.remove('show');
+            });
+        };
         
-        photoUpload.addEventListener('change', (e) => {
-            if (e.target.files && e.target.files.length > 0) {
-                const file = e.target.files[0];
-                
-                // Validasi ukuran file (max 5MB)
-                if (file.size > 5 * 1024 * 1024) {
-                    alert('Ukuran file terlalu besar. Maksimal 5MB.');
-                    return;
-                }
-                
-                // Validasi tipe file
-                if (!file.type.match('image.*')) {
-                    alert('Hanya file gambar yang diperbolehkan.');
-                    return;
-                }
-                
-                const reader = new FileReader();
-                
-                reader.onloadstart = () => {
-                    // Tampilkan loading state
+        // Initialize event listeners after DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            // File upload change handler
+            photoUpload.addEventListener('change', (e) => {
+                if (e.target.files && e.target.files[0]) {
+                    const file = e.target.files[0];
+                    
+                    // Validate file type
+                    const validTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+                    if (!validTypes.includes(file.type)) {
+                        alert('Hanya file JPG, JPEG, atau PNG yang diperbolehkan.');
+                        resetUpload();
+                        return;
+                    }
+                    
+                    // Validate file size (5MB max)
+                    if (file.size > 5 * 1024 * 1024) {
+                        alert('Ukuran file terlalu besar. Maksimal 5MB.');
+                        resetUpload();
+                        return;
+                    }
+                    
+                    // Show loading state
                     uploadContent.innerHTML = `
                         <div class="flex flex-col items-center justify-center py-12">
                             <div class="loader mb-4"></div>
-                            <p class="text-gray-500">Mengupload gambar...</p>
+                            <p class="text-gray-500">Memproses gambar...</p>
                         </div>
                     `;
-                };
-                
-                reader.onload = (event) => {
-                    photoPreview.src = event.target.result;
-                    uploadContent.classList.add('hidden');
-                    previewContent.classList.remove('hidden');
-                    analyzeBtn.classList.remove('hidden');
-                    defaultIcon.classList.add('hidden');
                     
-                    // Reset result section if previously shown
-                    resultSection.classList.add('hidden');
-                    smokeAnimation.classList.add('hidden');
-                };
-                
-                reader.onerror = () => {
-                    alert('Gagal membaca file. Silakan coba lagi.');
-                    resetUpload();
-                };
-                
-                reader.readAsDataURL(file);
-            }
-        });
-        
-        changePhoto.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            resetUpload();
-        });
-        
-        analyzeBtn.addEventListener('click', (e) => {
-            e.preventDefault();
+                    const reader = new FileReader();
+                    
+                    reader.onload = (event) => {
+                        photoPreview.src = event.target.result;
+                        uploadContent.classList.add('hidden');
+                        previewContent.classList.remove('hidden');
+                        analyzeBtn.classList.remove('hidden');
+                        defaultIcon.classList.add('hidden');
+                        
+                        // Reset result section if previously shown
+                        resultSection.classList.add('hidden');
+                        smokeAnimation.classList.add('hidden');
+                    };
+                    
+                    reader.onerror = () => {
+                        alert('Gagal membaca file. Silakan coba lagi.');
+                        resetUpload();
+                    };
+                    
+                    reader.readAsDataURL(file);
+                }
+            });
             
-            // Show loading state
-            analyzeBtn.innerHTML = `
-                <div class="loader mr-2"></div>
-                Menganalisa...
-            `;
-            analyzeBtn.disabled = true;
+            // Change photo button
+            changePhoto.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                resetUpload();
+            });
             
-            // Simulate analysis delay
-            setTimeout(() => {
-                analyzeBtn.classList.add('hidden');
-                analyzeBtn.disabled = false;
+            // Analyze button
+            analyzeBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                
+                // Show loading state
                 analyzeBtn.innerHTML = `
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 
+                    <div class="loader mr-2"></div>
+                    Menganalisa...
+                `;
+                analyzeBtn.disabled = true;
+                
+                // Simulate analysis delay
+                setTimeout(() => {
+                    analyzeBtn.classList.add('hidden');
+                    analyzeBtn.disabled = false;
+                    analyzeBtn.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h
