@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rokok Match - Temukan Rokok yang Cocok untuk Anda</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        
+        :root {
+            --primary: #2c3e50;
+            --secondary: #e74c3c;
+            --accent: #3498db;
+            --light: #ecf0f1;
+            --dark: #2c3e50;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f5f5f5;
+            color: var(--dark);
+            min-height: 100vh;
+            position: relative;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+        }
+        
+        .cigarette {
+            width: 120px;
+            height: 30px;
+            background: linear-gradient(90deg, #fff 0%, #f5f5f5 50%, #fff 100%);
+            position: relative;
+            border-radius: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            margin: 20px auto;
+        }
+        
+        .filter {
+            width: 20px;
+            height: 30px;
+            background: linear-gradient(90deg, #d4a76a 0%, #f5d999 100%);
+            position: absolute;
+            left: 0;
+            border-radius: 15px 0 0 15px;
+        }
+        
+        .brand-stripe {
+            position: absolute;
+            height: 30px;
+            width: 20px;
+            right: 30px;
+        }
+        
+        .smoke {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background: rgba(255,255,255,0.8);
+            border-radius: 50%;
+            filter: blur(10px);
+            animation: smoke 3s infinite ease-out;
+            opacity: 0;
+        }
+        
+        @keyframes smoke {
+            0% {
+                transform: translate(0, 0) scale(0.5);
+                opacity: 0;
+            }
+            50% {
+                opacity: 0.8;
+            }
+            100% {
+                transform: translate(40px, -60px) scale(1.2);
+                opacity: 0;
+            }
+        }
+        
+        .photo-container {
+            border: 3px dashed var(--accent);
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .photo-container:hover {
+            transform: scale(1.02);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .result-card {
+            transform: translateY(20px);
+            opacity: 0;
+            transition: all 0.5s ease;
+        }
+        
+        .result-card.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        
+        .floating {
+            animation: floating 3s ease-in-out infinite;
+        }
+        
+        @keyframes floating {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        
+        /* Watermark Style */
+        .watermark {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            opacity: 0.7;
+            z-index: 1000;
+            font-size: 14px;
+            color: #555;
+            background: rgba(255,255,255,0.7);
+            padding: 5px 10px;
+            border-radius: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .watermark:hover {
+            opacity: 1;
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+    <!-- Watermark -->
+    <div class="watermark">By Melonz Developer</div>
+    
+    <header class="gradient-bg text-white py-8 shadow-lg">
+        <div class="container mx-auto px-4 text-center">
+            <h1 class="text-4xl md:text-5xl font-bold mb-2">Rokok Match</h1>
+            <p class="text-xl opacity-90">Temukan merek rokok yang paling cocok dengan kepribadianmu!</p>
+        </div>
+    </header>
+    
+    <main class="flex-grow container mx-auto px-4 py-12">
+        <div class="max-w-3xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden">
+            <div class="p-8">
+                <div class="text-center mb-8">
+                    <h2 class="text-2xl font-semibold text-gray-800">Upload Foto Dirimu</h2>
+                    <p class="text-gray-600 mt-2">Kami akan menganalisis foto Anda dan merekomendasikan merek rokok yang sesuai</p>
+                </div>
+                
+                <div class="flex flex-col md:flex-row gap-8 items-center">
+                    <div class="w-full md:w-1/2">
+                        <div class="photo-container p-4 cursor-pointer bg-gray-50 rounded-lg text-center" id="uploadContainer">
+                            <input type="file" id="photoUpload" accept="image/*" class="hidden">
+                            <div class="py-12" id="uploadContent">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                </svg>
+                                <p class="mt-4 font-medium">Klik untuk upload foto</p>
+                                <p class="text-sm text-gray-500 mt-1">Format JPG, PNG (max 5MB)</p>
+                            </div>
+                            <div class="hidden" id="previewContent">
+                                <img id="photoPreview" class="w-full h-auto rounded-lg max-h-64 object-cover mx-auto" src="" alt="Preview">
+                                <button id="changePhoto" class="mt-4 px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg text-gray-700 transition">Ganti Foto</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="w-full md:w-1/2">
+                        <div class="bg-gray-50 p-6 rounded-lg h-full flex flex-col justify-center">
+                            <div class="text-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" id="defaultIcon">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                </svg>
+                                
+                                <div id="resultSection" class="hidden">
+                                    <div class="result-card mb-6">
+                                        <h3 class="text-xl font-semibold text-gray-800">Hasil Analisa</h3>
+                                        <p class="text-gray-600 mt-1">Merek rokok yang cocok untukmu:</p>
+                                    </div>
+                                    
+                                    <div class="result-card">
+                                        <div id="cigaretteResult" class="flex flex-col items-center">
+                                            <div class="cigarette mb-2">
+                                                <div class="filter"></div>
+                                                <div class="brand-stripe" id="brandStripe"></div>
+                                            </div>
+                                            <h4 id="brandName" class="text-2xl font-bold text-gray-800 mt-2"></h4>
+                                            <p id="brandDesc" class="text-gray-600 mt-2 text-sm max-w-xs mx-auto"></p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="result-card mt-8">
+                                        <button id="tryAgain" class="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition">Coba Lagi</button>
+                                    </div>
+                                </div>
+                                
+                                <button id="analyzeBtn" class="hidden px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition flex items-center justify-center mx-auto">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                    </svg>
+                                    Analisa Sekarang
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="max-w-3xl mx-auto mt-12 bg-white rounded-xl shadow-lg overflow-hidden hidden" id="smokeAnimation">
+            <div class="p-8 text-center">
+                <h3 class="text-xl font-semibold text-gray-800 mb-4">Nikmati rekomendasi kami!</h3>
+                <div class="relative flex justify-center">
+                    <div class="cigarette floating">
+                        <div class="filter"></div>
+                        <div class="brand-stripe" id="animatedStripe"></div>
+                    </div>
+                    <div class="smoke" style="left: 100px; top: -20px; animation-delay: 0.5s;"></div>
+                    <div class="smoke" style="left: 110px; top: -30px; animation-delay: 1s;"></div>
+                    <div class="smoke" style="left: 90px; top: -25px; animation-delay: 1.5s;"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <footer class="bg-gray-800 text-white py-6">
+        <div class="container mx-auto px-4 text-center">
+            <p class="opacity-90">© 2023 Rokok Match - Hanya untuk hiburan semata</p>
+            <p class="text-sm opacity-70 mt-2">Merokok dapat menyebabkan kanker, serangan jantung, impotensi, dan gangguan kehamilan dan janin</p>
+        </div>
+    </footer>
+
+    <script>
+        // Daftar merek rokok dengan deskripsi dan warna stripe
+        const cigaretteBrands = [
+            {
+                name: "Marlboro",
+                desc: "Klasik dan kuat seperti dirimu. Cocok untuk mereka yang berjiwa petualang.",
+                color: "#e74c3c"
+            },
+            {
+                name: "Sampoerna",
+                desc: "Elegan dan berkelas, sama seperti penampilanmu yang selalu rapi.",
+                color: "#2c3e50"
+            },
+            {
+                name: "Djarum Super",
+                desc: "Untuk yang suka sesuatu yang berbeda dan berani tampil beda.",
+                color: "#e67e22"
+            },
+            {
+                name: "LA Bold",
+                desc: "Kamu orangnya santai tapi penuh gaya, LA Bold cocok untukmu.",
+                color: "#3498db"
+            },
+            {
+                name: "U Mild",
+                desc: "Untuk yang suka hal-hal yang ringan tapi tetap berkelas.",
+                color: "#9b59b6"
+            },
+            {
+                name: "Gudang Garam",
+                desc: "Tradisional tapi tetap relevan, seperti kepribadianmu yang timeless.",
+                color: "#c0392b"
+            },
+            {
+                name: "Esse",
+                desc: "Modern dan stylish, cocok untuk gaya hidup sehatmu.",
+                color: "#16a085"
+            },
+            {
+                name: "Lucky Strike",
+                desc: "Untuk jiwa-jiwa bebas yang tak suka diatur.",
+                color: "#f1c40f"
+            }
+        ];
+        
+        // DOM Elements
+        const photoUpload = document.getElementById('photoUpload');
+        const uploadContainer = document.getElementById('uploadContainer');
+        const uploadContent = document.getElementById('uploadContent');
+        const previewContent = document.getElementById('previewContent');
+        const photoPreview = document.getElementById('photoPreview');
+        const changePhoto = document.getElementById('changePhoto');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const resultSection = document.getElementById('resultSection');
+        const brandName = document.getElementById('brandName');
+        const brandDesc = document.getElementById('brandDesc');
+        const brandStripe = document.getElementById('brandStripe');
+        const tryAgain = document.getElementById('tryAgain');
+        const smokeAnimation = document.getElementById('smokeAnimation');
+        const animatedStripe = document.getElementById('animatedStripe');
+        const defaultIcon = document.getElementById('defaultIcon');
+        
+        // Event Listeners
+        uploadContainer.addEventListener('click', () => {
+            photoUpload.click();
+        });
+        
+        photoUpload.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                const file = e.target.files[0];
+                const reader = new FileReader();
+                
+                reader.onload = (event) => {
+                    photoPreview.src = event.target.result;
+                    uploadContent.classList.add('hidden');
+                    previewContent.classList.remove('hidden');
+                    analyzeBtn.classList.remove('hidden');
+                    defaultIcon.classList.add('hidden');
+                    
+                    // Reset result section if previously shown
+                    resultSection.classList.add('hidden');
+                    smokeAnimation.classList.add('hidden');
+                };
+                
+                reader.readAsDataURL(file);
+            }
+        });
+        
+        changePhoto.addEventListener('click', (e) => {
+            e.stopPropagation();
+            photoUpload.value = '';
+            uploadContent.classList.remove('hidden');
+            previewContent.classList.add('hidden');
+            analyzeBtn.classList.add('hidden');
+            defaultIcon.classList.remove('hidden');
+        });
+        
+        analyzeBtn.addEventListener('click', () => {
+            // Show loading state
+            analyzeBtn.innerHTML = `
+                <svg class="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Menganalisa...
+            `;
+            
+            // Simulate analysis delay
+            setTimeout(() => {
+                analyzeBtn.classList.add('hidden');
+                
+                // Get random cigarette brand
+                const randomBrand = cigaretteBrands[Math.floor(Math.random() * cigaretteBrands.length)];
+                
+                // Update result
+                brandName.textContent = randomBrand.name;
+                brandDesc.textContent = randomBrand.desc;
+                brandStripe.style.background = randomBrand.color;
+                animatedStripe.style.background = randomBrand.color;
+                
+                // Show result with animation
+                resultSection.classList.remove('hidden');
+                setTimeout(() => {
+                    document.querySelectorAll('.result-card').forEach(card => {
+                        card.classList.add('show');
+                    });
+                }, 100);
+                
+                // Show smoke animation after a delay
+                setTimeout(() => {
+                    smokeAnimation.classList.remove('hidden');
+                }, 1500);
+                
+            }, 2000);
+        });
+        
+        tryAgain.addEventListener('click', () => {
+            // Hide result and show upload again
+            resultSection.classList.add('hidden');
+            smokeAnimation.classList.add('hidden');
+            analyzeBtn.classList.remove('hidden');
+            analyzeBtn.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1  ```javascript
+                1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
+                </svg>
+                Analisa Sekarang
+            `;
+            
+            // Reset result card animations
+            document.querySelectorAll('.result-card').forEach(card => {
+                card.classList.remove('show');
+            });
+        });
+    </script>
+</body>
+</html>
+```
